@@ -8,15 +8,31 @@ role Project::Bot {
     use Project::Bot::Feed;
     use Project::Bot::Topic;
     
-    has 'connections' => (
+    has 'connections' => ( is => 'ro', isa => 'Maybe[ArrayRef]', required => 0, predicate => 'has_connections' );
+    
+    has '_connections' => (
         traits => [qw/Array/],
         is => 'ro',
         isa => BotConnectionSet,
-        coerce => 1,
+        lazy => 1,
+        builder => '_build_connections',
         handles => {
             'all_connections' => 'elements'
         }
     );
+    
+    method _build_connections() {
+        my @cons;
+        return \@cons unless $self->has_connections and ref($self->connections);
+        foreach (@{ $self->connections }) {
+            my $class = 'Project::Bot::Connection::' . delete $_->{module} or die "cannot connect Connection with a module argument";
+            Class::MOP::load_class($class);
+            push(@cons, $class->new(%$_, bot => $self ));
+        }
+        return \@cons;
+    }
+    
+    
     has 'interval' => (is => 'ro', isa => 'Int');
     
     has 'condvar' => (
