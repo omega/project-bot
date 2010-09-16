@@ -56,6 +56,7 @@ class ::Connection::IRC with ::Connection {
             to => $channel,
             from => (split("!", $ircmsg->{prefix}))[0],
             msg => $ircmsg->{params}->[1],
+            connection => $self,
             reply => sub {
                 my ($txt) = @_;
                 $self->send_chan( $channel, "PRIVMSG", $channel, $txt );
