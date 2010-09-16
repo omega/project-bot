@@ -13,7 +13,7 @@ role ::Connection {
     requires 'send_message_str';
     
     has 'is_connected' => (is => 'rw', isa => 'Bool', default => 0);
-    has 'bot' => ( is => 'ro', does => 'Project::Bot', required => 1 );
+    has 'bot' => ( is => 'ro', does => 'Project::Bot', required => 1, handles => [qw/bubble/] );
     has '_backlog' => (traits => [qw/Array/], is => 'ro', isa => 'ArrayRef', default => sub { [] },
         handles => {
             'queue' => 'push',
@@ -83,9 +83,7 @@ role ::Connection {
         return unless $msg;
         $self->send_message_str($msg);
         
-    }
-    
-    
+    }    
 }
 
 

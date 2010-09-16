@@ -6,6 +6,7 @@ class ::Connection::IRC with ::Connection {
     use MooseX::MultiMethods;
     
     use AnyEvent::IRC::Client;
+    use Project::Bot::Message;
     
     has 'conn' => (
         is => 'ro', default => sub {AnyEvent::IRC::Client->new},
@@ -49,8 +50,19 @@ class ::Connection::IRC with ::Connection {
     #method privatemsg($nick, $ircmsg) {
     #}
 
-    #method publicmsg($channel, $ircmsg) {
-    #}
+    method publicmsg($client, $channel, $ircmsg) {
+        
+        $self->bubble(Project::Bot::Message->new(
+            to => $channel,
+            from => (split("!", $ircmsg->{prefix}))[0],
+            msg => $ircmsg->{params}->[1],
+            reply => sub {
+                my ($txt) = @_;
+                $self->send_chan( $channel, "PRIVMSG", $channel, $txt );
+            },
+        ));
+
+    }
 
     method connect($con, $error?) {
         if ( defined $error ) {
