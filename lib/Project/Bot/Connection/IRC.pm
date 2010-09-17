@@ -59,7 +59,12 @@ class ::Connection::IRC with ::Connection {
             connection => $self,
             reply => sub {
                 my ($txt) = @_;
-                $self->send_chan( $channel, "PRIVMSG", $channel, $txt );
+                my @lines = grep { !/^\s*$/ } split("\n", $txt);
+                foreach (@lines) {
+                    $self->send_chan( $channel, "PRIVMSG", $channel, $_ );
+                    
+                }
+                
             },
         ));
 
