@@ -35,7 +35,8 @@ role Project::Bot {
         my @cons;
         return \@cons unless $self->has_connections and ref($self->connections);
         foreach (@{ $self->connections }) {
-            my $class = 'Project::Bot::Connection::' . delete $_->{module} or die "cannot connect Connection with a module argument";
+            my $class = 'Project::Bot::Connection::' . delete $_->{module} 
+                or die "cannot connect Connection with a module argument";
             Class::MOP::load_class($class);
             push(@cons, $class->new(%$_, bot => $self ));
         }
