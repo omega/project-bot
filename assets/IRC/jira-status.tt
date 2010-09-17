@@ -1,0 +1,4 @@
+[% xml %]
+[%- FOREACH entry IN xml.items %]
+[% IF entry.tags AND entry.tags.grep('.+').size > 0 %]12[% entry.tags.grep('.+').join(', ') %]: [% END %][% IF entry.author %][03[% entry.author %]] [% END %][% entry.title %] - 14[% entry.link %]
+[%- END %]
