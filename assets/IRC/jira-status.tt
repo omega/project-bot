@@ -1,4 +1,4 @@
-[% xml %]
-[%- FOREACH entry IN xml.items %]
-[% IF entry.tags AND entry.tags.grep('.+').size > 0 %]12[% entry.tags.grep('.+').join(', ') %]: [% END %][% IF entry.author %][03[% entry.author %]] [% END %][% entry.title %] - 14[% entry.link %]
+[% IF title; %]12[% title; %][% END %]
+[%- FOREACH entry IN xml.issues %]
+[% IF entry.tags AND entry.tags.grep('.+').size > 0 %]12[% entry.tags.grep('.+').join(', ') %]: [% END %][% IF entry.assignee %][03[% entry.assignee %]] [% END %][% entry.title %] - 14[% entry.link %]
 [%- END %]
