@@ -1,2 +1,4 @@
 etc/*
 !etc/.placeholder
+.prove
+.*~
