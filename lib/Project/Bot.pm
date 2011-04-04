@@ -119,7 +119,7 @@ role Project::Bot {
         
     }
 
-    method new_entries($feed_reader, $new_entries, $feed) {
+    method new_entries($feed_reader, $new_entries, $feed, $extra?) {
         for (reverse @$new_entries) { # We want oldest first
             my ($hash, $entry) = @$_;
             # Should here send a message
