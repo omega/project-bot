@@ -3,18 +3,18 @@ use MooseX::Declare;
 class Project::Bot::Feed {
     use AnyEvent::Feed;
     use Project::Bot::Types qw(FilterList);
-    
+
     has 'url' => (is => 'ro', isa => 'Str', required => 1);
     has 'interval' => (is => 'ro', isa => 'Int', default => 30);
     has 'on_fetch' => (is => 'ro', isa => 'CodeRef', required => 0);
     has 'username' => (is => 'ro', isa => 'Str', predicate => 'has_username');
     has 'password' => (is => 'ro', isa => 'Str');
     has 'filter'   => (is => 'ro', isa => FilterList, coerce => 1);
-    
+
     has 'conn' => (
         is => 'ro', isa => 'AnyEvent::Feed', lazy => 1, builder => '_build_conn',
     );
-    
+
     method _build_conn() {
         AnyEvent::Feed->new(
             url => $self->url,

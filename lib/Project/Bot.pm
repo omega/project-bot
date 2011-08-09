@@ -1,7 +1,7 @@
 use MooseX::Declare;
 
 role Project::Bot {
-        
+
     use AnyEvent;
     use AnyEvent::Strict;
     use Project::Bot::Types qw/BotConnectionSet MyFeed Topic/;
@@ -10,7 +10,7 @@ role Project::Bot {
     use Project::Bot::Message;
     use Project::Bot::Event;
     use Project::Bot::Command;
-    
+
     has 'events' => (is => 'ro', isa => 'Project::Bot::Event', lazy => 1, builder => '_setup_events', handles => {
         'register_callback' => 'reg_cb',
         'emit_event' => 'event',
@@ -19,7 +19,7 @@ role Project::Bot {
         Project::Bot::Event->new();
     }
     has 'connections' => ( is => 'ro', isa => 'Maybe[ArrayRef]', required => 0, predicate => 'has_connections' );
-    
+
     has '_connections' => (
         traits => [qw/Array/],
         is => 'ro',
@@ -30,21 +30,21 @@ role Project::Bot {
             'all_connections' => 'elements'
         }
     );
-    
+
     method _build_connections() {
         my @cons;
         return \@cons unless $self->has_connections and ref($self->connections);
         foreach (@{ $self->connections }) {
-            my $class = 'Project::Bot::Connection::' . delete $_->{module} 
+            my $class = 'Project::Bot::Connection::' . delete $_->{module}
                 or die "cannot connect Connection with a module argument";
             Class::MOP::load_class($class);
             push(@cons, $class->new(%$_, bot => $self ));
         }
         return \@cons;
     }
-    
+
     has 'commands' => ( is => 'ro', isa => 'Maybe[ArrayRef]', required => 0, predicate => 'has_commands' );
-    has '_commands' => ( 
+    has '_commands' => (
         traits => [qw/Array/],
         is => 'ro',
         isa => 'ArrayRef',
@@ -62,13 +62,13 @@ role Project::Bot {
         \@commands;
     }
     has 'interval' => (is => 'ro', isa => 'Int');
-    
+
     has 'condvar' => (
-        is => 'ro', default => sub { AnyEvent->condvar }, handles => [qw/wait broadcast/] 
+        is => 'ro', default => sub { AnyEvent->condvar }, handles => [qw/wait broadcast/]
     );
-    
+
     has 'topic' => (is => 'ro', isa => Topic, coerce => 1, required => 0, predicate => 'has_topic', );
-    
+
     has 'feeds' => (is => 'ro', isa => 'Maybe[ArrayRef]', required => 0, predicate => 'has_feeds', );
     has '_feeds' => (
         is => 'ro', isa => 'ArrayRef', lazy => 1, builder => '_build_feeds',
@@ -90,7 +90,7 @@ role Project::Bot {
         }
         return \@feeds;
     }
-    
+
 
     method start_bot() {
         # Need to make sure all connections get connected, and set up properly
@@ -112,11 +112,11 @@ role Project::Bot {
         }
         $self->_commands;
         $self->wait;
-        
-        
+
+
         #$self->broadcast;
-        
-        
+
+
     }
 
     method new_entries($feed_reader, $new_entries, $feed, $extra?) {
@@ -127,9 +127,9 @@ role Project::Bot {
                 $con->send_message($entry)
             }
         }
-        
+
     }
-    
+
     method topic_fail() {
         foreach my $con ($self->all_connections) {
             $con->topic_fail() if $con->can('topic_fail');
@@ -140,16 +140,16 @@ role Project::Bot {
             $con->topic_recover() if $con->can('topic_recover');
         }
     }
-    
-    
+
+
     method bubble(Project::Bot::Message $msg) {
         # Now we should just send an event right, on_message event
         unless ($self->emit_event('message_recieved' => $msg) and $self->has_commands) {
             warn "no handlers for message_recieved $msg\n";
         }
     }
-    
-    
+
+
 }
 
 

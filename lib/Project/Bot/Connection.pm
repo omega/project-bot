@@ -3,15 +3,15 @@ namespace Project::Bot;
 
 role ::Connection {
     use MooseX::MultiMethods;
-    
+
     use Project::Bot::Types qw/XMLFeedEntry/;
     use Template;
-    
+
     requires 'establish_connection';
-    
+
     # XXX: This is because we can't have some multi here, and some in the implementing class
     requires 'send_message_str';
-    
+
     has 'is_connected' => (is => 'rw', isa => 'Bool', default => 0);
     has 'bot' => ( is => 'ro', does => 'Project::Bot', required => 1, handles => [qw/bubble/] );
     has '_backlog' => (traits => [qw/Array/], is => 'ro', isa => 'ArrayRef', default => sub { [] },
@@ -40,12 +40,12 @@ role ::Connection {
             }
         ));
     }
-    
+
     has 'renderer' => (is => 'ro', builder => '_build_renderer', lazy => 1, handles => [qw/process/]);
     method _build_renderer() {
         # Figure out include path
         my $path = "./assets/" . $self->class;
-        
+
         return Template->new( INCLUDE_PATH => [$path, './assets/']);
     }
     method class() {
