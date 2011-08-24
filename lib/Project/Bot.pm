@@ -124,7 +124,7 @@ role Project::Bot {
             my ($hash, $entry) = @$_;
             # Should here send a message
             foreach my $con ($self->all_connections) {
-                $con->send_message($entry)
+                $con->queue_message($entry)
             }
         }
 

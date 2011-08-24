@@ -5,9 +5,11 @@ class ::Connection::XMPP with ::Connection {
 
     use AnyEvent::XMPP::IM;
     use AnyEvent::XMPP::Util qw/new_message/;
+    use AnyEvent::XMPP::Node qw/simxml/;
 
-    $AnyEvent::XMPP::IM::DEBUG     = 1;
-    $AnyEvent::XMPP::Stream::DEBUG = 1;
+
+    #$AnyEvent::XMPP::IM::DEBUG     = 1;
+    #$AnyEvent::XMPP::Stream::DEBUG = 1;
     use Project::Bot::Message;
 
     has 'conn' => (
@@ -30,7 +32,7 @@ class ::Connection::XMPP with ::Connection {
     }
 
 
-    has [qw/room jid password/] => (is => 'ro', required => 1);
+    has [qw/room jid password nick/] => (is => 'ro', required => 1);
 #    has 'port' => (is => 'ro', default => 6667);
 #    has 'options' => (is => 'ro', isa => 'HashRef');
 
@@ -42,7 +44,7 @@ class ::Connection::XMPP with ::Connection {
         $self->conn->add_account( $self->jid, $self->password );
 
         # $self->send_srv( "JOIN", $self->channel );
-        $self->muc->join($self->jid, $self->room);
+        $self->muc->join($self->jid, $self->room, $self->nick);
     }
     method demolish_connection() {
         $self->disconnect;
@@ -65,17 +67,53 @@ class ::Connection::XMPP with ::Connection {
             ) if $self->can($mtd);
         }
     }
-    multi method send_message_str(Str $text) {
+    method send_message_str(Str $text) {
         print "Should say something! $text";
-
+        $text =~ s/\s+$//sm;
         #$self->send_chan( $self->channel, "NOTICE", $self->channel, $text );
-        $self->conn->send(
-            new_message(
-                'groupchat',
-                $text,
-                src => $self->jid,
-                to  => $self->room,
+        my $msg = new_message(
+            'groupchat',
+            $text,
+            src => $self->jid,
+            to  => $self->room,
+        );
+        $self->conn->send( $msg );
+
+    }
+    method send_message(Object $entry) {
+        my $msg = new_message(
+            'groupchat',
+            $entry->title,
+            src => $self->jid,
+            to  => $self->room,
+        );
+        warn "Entry: " . $entry->link;
+        $msg->add(simxml(
+                node => {
+                    ns => 'http://jabber.org/protocol/xhtml-im',
+                    name => 'html',
+                    childs => [
+                        {
+                            name => 'body',
+                            ns => 'http://www.w3.org/1999/xhtml',
+                            childs => [{
+                                    name => 'span',
+                                    attrs => ['style', 'color: red'],
+                                    childs => [$entry->title],
+                                },
+                                {
+                                    name => 'a',
+                                    attrs => ['href', $entry->link],
+                                    childs => [' [More information] '],
+                                },
+                            ],
+                        }
+                    ],
+                }
             )
+        );
+        $self->conn->send(
+            $msg
         );
     }
 
@@ -87,16 +125,16 @@ class ::Connection::XMPP with ::Connection {
     method muc_message($muc, $resjid, $roomjid, $others, $node) {
         print "got message: $roomjid, $others, $node\n";
         print "   - " . $node->attr('from') . "\n";
-        $self->conn->send (
-            new_message (
-                'groupchat',
-                "Hello there, got your message: " . $node->meta->{body},
-                src => $node->meta->{dest},   # src specifies the resource to
-                # send the message from.
-                #to => $node->attr ('from')
-                to => $roomjid,
-            )
-        ); # to where to send the message to.
+        #$self->conn->send (
+            #new_message (
+                #'groupchat',
+                #"Hello there, got your message: " . $node->meta->{body},
+                #src => $node->meta->{dest},   # src specifies the resource to
+                ## send the message from.
+                ##to => $node->attr ('from')
+                #to => $roomjid,
+            #)
+        #); # to where to send the message to.
     }
 
     #method privatemsg($nick, $ircmsg) {

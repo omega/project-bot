@@ -22,7 +22,7 @@ role ::Connection {
             '_get_queued' => 'get',
         }
     );
-    method queue_message(Str $str) {
+    method queue_message(Object $str) {
         $self->queue($str);
         while ($self->queue_length > 3) {
             $self->dequeue;
@@ -54,36 +54,40 @@ role ::Connection {
     }
     method render($template, $vars) {
         my $out;
-        $self->process($template, $vars, \$out) || confess("Error rendering template $template: " 
+        $self->process($template, $vars, \$out) || confess("Error rendering template $template: "
             . $self->renderer->error()
         );
         return $out;
     }
+    method render_entry(Object $entry) {
+        $self->render(lc($self->class) . ".tt", { entry => $entry })
+    }
+
     multi method send_message(Object $entry) {
         # should render it using a TT template via a helper on Connection?
         # Guess template based on class name
-        
-        $self->send_message($self->render(lc($self->class) . ".tt", { entry => $entry }));
+
+        $self->send_message($self->render_entry($entry));
     }
     multi method send_message(Str $str) {
         #warn "queue: $str\n";
         # We only queue it, muaha! :)
-        
-        $self->queue_message($str);
+
+        $self->send_message_str($str);
     }
     method demolish_connection() {
-        
+
     }
-    
-    
-    
+
+
+
     method timer() {
         return unless $self->is_connected();
         my $msg = $self->dequeue;
         return unless $msg;
-        $self->send_message_str($msg);
-        
-    }    
+        $self->send_message($msg);
+
+    }
 }
 
 
